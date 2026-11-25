@@ -1,6 +1,6 @@
 # Tipping patterns in Chicago
 
-*Alessandro Ferrera · October 2024*
+*Alessandro Ferrera*
 
 Of **6,349,902 complete Chicago ride-hailing trips**, **1,613,010 (25.4%)** had a recorded tip. Could the route, fare and pickup time help an app anticipate which riders will tip before it suggests an amount?
 
@@ -11,6 +11,14 @@ Of **6,349,902 complete Chicago ride-hailing trips**, **1,613,010 (25.4%)** had 
 The highest recorded tip rate was **45.7%** on the 251,955 rides between O’Hare and the Central zone. It was **7.3%** on the 478,322 rides that began and ended in the South zone. The chart covers all 15 zone pairs and counts both directions together. [Route counts and rates](report/tables/routes.csv)
 
 ![Recorded tip rates for all 15 routes, from 45.7% on Airport–Central to 7.3% within South](report/plots/routes.png)
+
+The **pickup map** groups complete rides by the Chicago community area where they started. Darker purple on the right means a higher share of rides with a recorded tip. Larger circles on the left mark busier pickup clusters in a sample of 100,000 rides.
+
+![Chicago pickup clusters on the left and recorded tip rates by pickup area on the right, with O’Hare among the darkest areas](report/plots/pickup_map.png)
+
+The **drop-off map** shows the same rate for rides ending in each area, with drop-off clusters from the same sample on the left. O’Hare has a relatively high recorded tip rate for both pickups and drop-offs.
+
+![Chicago drop-off clusters on the left and recorded tip rates by destination on the right, with darker shading around O’Hare](report/plots/dropoff_map.png)
 
 A tip was recorded on **21.9%** of overnight rides (23:00–07:00), compared with **26.2%** of rides starting between 07:00 and 15:00. The heatmaps show how trip volume (left) and the share with a recorded tip (right) varied by pickup hour and day of the week in a sample of 100,000 rides.
 
