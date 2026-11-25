@@ -3,3 +3,4 @@
 /data/**/*.csv.gz
 /data/**/*.zip
 /data/public_october_2024/
+.DS_Store
