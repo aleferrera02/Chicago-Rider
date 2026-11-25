@@ -1,0 +1,59 @@
+# Tipping patterns in Chicago
+
+*Alessandro Ferrera · October 2024*
+
+Of **6,349,902 complete Chicago ride-hailing trips**, **1,613,010 (25.4%)** had a recorded tip. Could the route, fare and pickup time help an app anticipate which riders will tip before it suggests an amount?
+
+[Read the analysis notebook](Chicago_Tipping.ipynb) · [View the presentation (PDF)](Chicago%20riders.pdf) · [Get the trip data](#data-access)
+
+## How tipping varied across rides
+
+The highest recorded tip rate was **45.7%** on the 251,955 rides between O’Hare and the Central zone. It was **7.3%** on the 478,322 rides that began and ended in the South zone. The chart covers all 15 zone pairs and counts both directions together. [Route counts and rates](report/tables/routes.csv)
+
+![Recorded tip rates for all 15 routes, from 45.7% on Airport–Central to 7.3% within South](report/plots/routes.png)
+
+A tip was recorded on **21.9%** of overnight rides (23:00–07:00), compared with **26.2%** of rides starting between 07:00 and 15:00. The heatmaps show how trip volume (left) and the share with a recorded tip (right) varied by pickup hour and day of the week in a sample of 100,000 rides.
+
+![Two heatmaps by local pickup hour and day of the week, showing ride counts on the left and recorded tip rates on the right](report/plots/days.png)
+
+In the fare sample, **17.6%** of trips with fares up to USD 5 had a recorded tip, rising to **38.2%** for fares above USD 25. Across all complete trips, the rate was **26.1%** when one booking used the car and **7.7%** when two bookings shared it. [Fare chart](report/plots/fare.png) · [Pooling counts and rates](report/tables/pool_levels.csv)
+
+## How accurately could a tip be predicted?
+
+The models used route, fare, extra charges, pooling and pickup timing. Each route’s score came from training rides only. The **967,806 held-out rides** contained equal numbers with and without a recorded tip, so always predicting one class would give 50% accuracy.
+
+| Model | Accuracy | Tip precision | Tip recall | Tip-class F1 |
+| --- | ---: | ---: | ---: | ---: |
+| Logistic regression | 60.62% | 58.15% | 75.79% | 0.6581 |
+| Lasso logistic regression | 60.57% | 58.07% | 76.01% | 0.6584 |
+| Classification tree | 60.57% | 58.29% | 74.38% | 0.6536 |
+
+The route score accounted for **85.0%** of the tree’s variable importance. Even on the highest-rate route, more than half of rides ended without a recorded tip. [Tree variable importance](report/tables/tree_importance.csv) · [Model results](report/tables/model_summary.csv)
+
+## What should the app test?
+
+The City rounds in-app tips to the nearest dollar and excludes cash. A recorded zero can therefore include a small in-app tip or a cash tip. The records also omit the suggestion a rider saw. [City trip records and field definitions](https://data.cityofchicago.org/d/n26f-ihde)
+
+The presentation proposes validating the model on a later month at its observed tip rate. An A/B test could then compare the standard suggestion with a higher or lower suggestion based on the prediction. Random assignment within each predicted class would allow the app to measure the change in **mean in-app tip dollars per ride**, including rides with zero tips.
+
+## Data access
+
+The published results use the City of Chicago’s October 2024 trip records. The trip files are stored separately because of their size. The notebook opens on GitHub with all figures and results, and the repository includes the community-area boundaries. [Community-area boundary data](https://data.cityofchicago.org/d/igwz-8jzy)
+
+**[Download the October 2024 trip data from Google Drive](https://drive.google.com/drive/folders/1pRsJLklIFVmi8ZuwEKMw1x9m5fBeduCP?usp=sharing)**
+
+- To use a **local October extract**, save it as `data/Chicago_rides_october24.csv` or `data/Chicago_rides_october24.csv.gz`. For a different filename, set `TRIPS_FILE` to its path in the notebook’s first code cell.
+- To **download from the City**, leave `TRIPS_FILE = None` and `DOWNLOAD = True`. The notebook looks for daily files such as `data/public_october_2024/2024-10-01.csv.gz` and downloads only the missing dates. [City of Chicago trip data](https://data.cityofchicago.org/d/n26f-ihde)
+
+## Run the notebook
+
+To run the notebook locally, start in the project directory with Python 3.12.
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m jupyterlab Chicago_Tipping.ipynb
+```
+
+Run the cells in order to regenerate the figures and tables. [Figures in PNG and PDF](report/plots/) · [Tables in CSV](report/tables/)

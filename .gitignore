@@ -1,0 +1,5 @@
+# Local trip extracts, archives and the daily download cache
+/data/**/*.csv
+/data/**/*.csv.gz
+/data/**/*.zip
+/data/public_october_2024/
