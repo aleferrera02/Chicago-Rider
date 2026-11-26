@@ -10,7 +10,7 @@ Of **6,349,902 complete Chicago ride-hailing trips**, **1,613,010 (25.4%)** had 
 
 The highest recorded tip rate was **45.7%** on the 251,955 rides between O’Hare and the Central zone. It was **7.3%** on the 478,322 rides that began and ended in the South zone. The chart covers all 15 zone pairs and counts both directions together. [Route counts and rates](report/tables/routes.csv)
 
-![Recorded tip rates for all 15 routes, from 45.7% on Airport–Central to 7.3% within South](report/plots/routes.png)
+![Recorded tip rates and 95% Wilson intervals for all 15 routes, from 45.7% on Airport–Central to 7.3% within South](report/plots/routes.png)
 
 The **pickup map** groups complete rides by the Chicago community area where they started. Darker purple on the right means a higher share of rides with a recorded tip. Larger circles on the left mark busier pickup clusters in a sample of 100,000 rides.
 
@@ -24,7 +24,9 @@ A tip was recorded on **21.9%** of overnight rides (23:00–07:00), compared wit
 
 ![Two heatmaps by local pickup hour and day of the week, showing ride counts on the left and recorded tip rates on the right](report/plots/days.png)
 
-In the fare sample, **17.6%** of trips with fares up to USD 5 had a recorded tip, rising to **38.2%** for fares above USD 25. Across all complete trips, the rate was **26.1%** when one booking used the car and **7.7%** when two bookings shared it. [Fare chart](report/plots/fare.png) · [Pooling counts and rates](report/tables/pool_levels.csv)
+In the fare sample, **17.6%** of trips with fares up to USD 5 had a recorded tip, rising to **38.2%** for fares above USD 25. Across all complete trips, the rate was **26.1%** when one booking used the car and **7.7%** when two bookings shared it. [Fare and additional charges chart](report/plots/fare.png) · [Pooling chart](report/plots/pooled.png) · [Pooling counts and rates](report/tables/pool_levels.csv)
+
+The additional charges panel displays groups up to USD 25. The pooling chart displays one to five bookings. Whiskers show pointwise **95% Wilson intervals** under a model of independent rides. The route and pooling intervals give a model-based reference for rates calculated from complete October records. [Wilson intervals](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm)
 
 ## How accurately could a tip be predicted?
 

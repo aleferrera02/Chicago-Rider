@@ -11,8 +11,11 @@ from matplotlib.ticker import FuncFormatter, MaxNLocator, MultipleLocator, Perce
 import numpy as np
 import pandas as pd
 from sklearn.cluster import DBSCAN
+from statsmodels.stats.proportion import proportion_confint
 
 from .geography import AREA_REGION, REGION_COLORS
+
+TIP_INTERVAL_STYLE = {"ecolor": "#23272b", "elinewidth": 1.15, "capsize": 3, "capthick": 1.15, "zorder": 4}
 
 
 def set_style():
@@ -174,14 +177,36 @@ def trip_maps(trips, sample, areas, end):
     return fig
 
 
+def _tip_rates(grouped):
+    counts = grouped.agg(trips="size", tipped_trips="sum")
+    counts["tip_rate"] = counts.tipped_trips / counts.trips
+    return counts
+
+
+def _wilson_errors(rates):
+    lower, upper = proportion_confint(rates.tipped_trips.to_numpy(), rates.trips.to_numpy(),
+                                      alpha=.05, method="wilson")
+    proportion = rates.tip_rate.to_numpy()
+    # Matplotlib expects distances from the estimate, with negative round-off clipped.
+    return np.maximum(0, np.vstack((proportion - lower, upper - proportion)))
+
+
+def _tip_interval_note(fig, right):
+    fig.text(right, .98, "Whiskers show 95% Wilson intervals", ha="right", va="top",
+             fontsize=10, color="#4d4d4d")
+
+
 def routes_chart(trips):
-    rates = trips.groupby("route", observed=True).tip_given.mean().sort_values()
+    rates = _tip_rates(trips.groupby("route", observed=True).tip_given).sort_values("tip_rate")
     fig, ax = plt.subplots(figsize=(10, 4))
-    fig.subplots_adjust(left=.19, right=.985, top=.985, bottom=.18)
-    ax.barh(rates.index.astype(str), rates, height=.88, color="#798675")
-    ax.set(xlabel="Tip Proportion", ylabel="Route")
+    fig.subplots_adjust(left=.19, right=.985, top=.89, bottom=.18)
+    ax.barh(rates.index.astype(str), rates.tip_rate, xerr=_wilson_errors(rates),
+            height=.88, color="#798675", error_kw=TIP_INTERVAL_STYLE)
+    ax.set(xlabel="Rides with a recorded tip", ylabel="Route")
+    ax.xaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
     ax.margins(y=.015)
     ax.tick_params(axis="y", labelsize=11)
+    _tip_interval_note(fig, .985)
     return fig
 
 
@@ -212,43 +237,50 @@ def _binned_rates(values, tips, edges):
         labels = [f"{'[' if i == 0 else '('}{fmt(a)},{fmt(b)}]"
                   for i, (a, b) in enumerate(zip(edges, edges[1:]))]
         codes = pd.cut(values, edges, labels=False, include_lowest=True).fillna(-1).astype(int)
-    table = pd.DataFrame({"code": codes, "tip": tips}).groupby("code").tip.mean()
+    table = _tip_rates(pd.DataFrame({"code": codes, "tip": tips}).groupby("code").tip)
     ids = [i for i in range(len(labels)) if i in table.index]
-    values = [table[i] for i in ids]
     names = [labels[i] for i in ids]
     if -1 in table.index:
         names.append("NA")
-        values.append(table[-1])
-    return names, values
+        ids.append(-1)
+    return names, table.loc[ids]
 
 
 def fare_chart(sample):
     # fare.R uses *fare* quantiles for both charts. Tied quantiles collapse to one boundary.
     edges = np.unique(np.quantile(sample.fare, np.linspace(0, 1, 9)))
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
-    fig.subplots_adjust(left=.08, right=.985, top=.96, bottom=.27, wspace=.20)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6), sharey=True)
+    fig.subplots_adjust(left=.08, right=.985, top=.91, bottom=.27, wspace=.20)
     for ax, col, label, color in zip(axes, ["fare", "additional_charges"],
-                                      ["Fare", "Additional Charges"], ["#3A1C5E", "#094047"]):
-        intervals, values = _binned_rates(sample[col], sample.tip_given, edges)
-        ax.bar(intervals, values, color=color, width=.9)
+                                      ["Fare (USD)", "Additional charges (USD)"], ["#A68BC5", "#74ADA8"]):
+        intervals, rates = _binned_rates(sample[col], sample.tip_given, edges)
+        if col == "additional_charges":
+            intervals, rates = intervals[:-1], rates.iloc[:-1]
+        if not rates.empty:
+            ax.bar(intervals, rates.tip_rate, yerr=_wilson_errors(rates),
+                   color=color, width=.9, error_kw=TIP_INTERVAL_STYLE)
         ax.set_xlabel(label, fontsize=18)
-        ax.tick_params(axis="y", labelsize=15)
+        ax.tick_params(axis="y", labelsize=13, labelleft=True)
         plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor", fontsize=10)
-    axes[0].set_ylabel("Tip Proportion", fontsize=18)
+    axes[0].set_ylabel("Rides with a recorded tip", fontsize=16)
+    axes[0].yaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
+    _tip_interval_note(fig, .985)
     return fig
 
 
 def pooling_chart(trips):
-    rates = trips.groupby("trips_pooled").tip_given.mean()
+    rates = _tip_rates(trips.groupby("trips_pooled").tip_given).loc[1:5]
     fig, ax = plt.subplots(figsize=(8, 5))
-    fig.subplots_adjust(left=.15, right=.985, top=.975, bottom=.17)
-    ax.plot(rates.index, rates, color="#988EC3", lw=2.3)
-    ax.scatter(rates.index, rates, color="#3C3156", s=30, zorder=3)
+    fig.subplots_adjust(left=.15, right=.985, top=.91, bottom=.17)
+    ax.plot(rates.index, rates.tip_rate, color="#988EC3", lw=2.3)
+    ax.errorbar(rates.index, rates.tip_rate, yerr=_wilson_errors(rates),
+                fmt="o", color="#3C3156", markersize=5.5, **TIP_INTERVAL_STYLE)
+    ax.set(xticks=range(1, 6), xlim=(.8, 5.2), ylim=(0, None))
     ax.set_xlabel("Bookings pooled (including this trip)", fontsize=16)
     ax.set_ylabel("Rides with a recorded tip", fontsize=16)
     ax.yaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
-    ax.xaxis.set_major_locator(MaxNLocator(6, integer=True, steps=[1,2,5,10]))
     ax.tick_params(labelsize=16)
+    _tip_interval_note(fig, .985)
     return fig
 
 
