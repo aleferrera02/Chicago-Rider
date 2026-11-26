@@ -46,12 +46,11 @@ The presentation proposes validating the model on a later month at its observed 
 
 ## Data access
 
-The published results use the City of Chicago’s October 2024 trip records. The trip files are stored separately because of their size. The notebook opens on GitHub with all figures and results, and the repository includes the community-area boundaries. [Community-area boundary data](https://data.cityofchicago.org/d/igwz-8jzy)
+On a fresh checkout, running the notebook with its default settings automatically downloads the October 2024 trip records from the Chicago Data Portal. It saves one compressed CSV per day in `data/public_october_2024/`. Later runs reuse those files and download only missing dates. [City of Chicago trip data](https://data.cityofchicago.org/d/n26f-ihde)
 
-**[Download the October 2024 trip data from Google Drive](https://drive.google.com/drive/folders/1pRsJLklIFVmi8ZuwEKMw1x9m5fBeduCP?usp=sharing)**
+If you already have a local October extract, save it as `data/Chicago_rides_october24.csv` or `data/Chicago_rides_october24.csv.gz`. For a different filename, set `TRIPS_FILE` to its path in the notebook’s first code cell.
 
-- To use a **local October extract**, save it as `data/Chicago_rides_october24.csv` or `data/Chicago_rides_october24.csv.gz`. For a different filename, set `TRIPS_FILE` to its path in the notebook’s first code cell.
-- To **download from the City**, leave `TRIPS_FILE = None` and `DOWNLOAD = True`. The notebook looks for daily files such as `data/public_october_2024/2024-10-01.csv.gz` and downloads only the missing dates. [City of Chicago trip data](https://data.cityofchicago.org/d/n26f-ihde)
+The notebook’s saved figures and results are visible on GitHub. The repository also includes the community-area boundaries used in the maps. [Community-area boundary data](https://data.cityofchicago.org/d/igwz-8jzy)
 
 ## Run the notebook
 

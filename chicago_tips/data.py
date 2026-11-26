@@ -12,8 +12,10 @@ import gzip
 import json
 import os
 import re
+import ssl
 import time
 
+import certifi
 import numpy as np
 import pandas as pd
 
@@ -41,11 +43,13 @@ WEEKEND_DATES = {4, 5, 6, 11, 12, 13, 18, 19, 20, 25, 26, 27, 31}
 def _get_bytes(resource, params):
     url = PORTAL + resource + "?" + urlencode(params)
     headers = {"User-Agent": "ChicagoTippingAnalysis/1.0", "Accept-Encoding": "gzip"}
+    context = ssl.create_default_context()
+    context.load_verify_locations(cafile=certifi.where())
     if token := os.getenv("SOCRATA_APP_TOKEN"):
         headers["X-App-Token"] = token
     for attempt in range(4):
         try:
-            with closing(urlopen(Request(url, headers=headers), timeout=120)) as response:
+            with closing(urlopen(Request(url, headers=headers), timeout=120, context=context)) as response:
                 payload = response.read()
                 return gzip.decompress(payload) if response.headers.get("Content-Encoding") == "gzip" else payload
         except HTTPError as error:
@@ -68,7 +72,7 @@ def _download_day(day, destination, expected=None):
     if expected is None:
         counts = _get_bytes(resource, {"$select": "count(*) as n", "$where": where})
         expected = int(pd.read_csv(BytesIO(counts))["n"].iloc[0])
-    size, written = 250_000, 0
+    size, written = 100_000, 0
     with NamedTemporaryFile(dir=destination.parent, suffix=".part", delete=False) as temp:
         pending = Path(temp.name)
     try:
